@@ -2,7 +2,7 @@
 #include <fstream>
 #include "LogAnalyser.h"
 
-TEST(LogAnalyserTest, CountsCorrectly) {
+TEST(LogAnalyserTest, CountsLogLevelsCorrectly) {
 	std::ofstream file("test.log");
 	file << "2024-01-01 10:00:00 INFO A \n";
 	file << "2024-01-01 10:00:01 WARNING B\n";
@@ -33,6 +33,23 @@ TEST(LogAnalyserEdgeCases, EmptyFile){
 	EXPECT_EQ(stats.error, 0);
 
 	std::remove("empty.log");
+}
+
+TEST(LogAnalyserTest, IgnoresInvalidLines) {
+	std::ofstream file("test_invalid.log");
+	file << "INVALID LINE\n";
+	file << "2024-01-01 10:00:00 INFO Valid\n";
+	file.close();
+
+	LogAnalyser analyser;
+	LogStats stats = analyser.analyse("test_invalid.log");
+
+	EXPECT_EQ(stats.lineCount, 2);
+	EXPECT_EQ(stats.info, 1);
+	EXPECT_EQ(stats.warning, 0);
+	EXPECT_EQ(stats.error, 0);
+
+	std::remove("test_invalid.log");
 }
 
 TEST(LogAnalyserTest, OnlyInfoLogs){
