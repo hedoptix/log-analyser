@@ -1,5 +1,6 @@
 #include <iostream>
 #include <filesystem>
+#include <fstream>
 #include "LogAnalyser.h"
 
 namespace fs = std::filesystem;
@@ -11,6 +12,7 @@ int main(int argc, char* argv[]) {
 		std::cout << "log_analyser <log_file>\n";
 		std::cout << "log_analyser <log_file> --stats\n";
 		std::cout << "log_analyser <log_file> --level INFO|WARNING|ERROR\n";
+		std::cout << "log_analyser <log_file> --stats --output <file>\n";
 		return 0;
 	}
 
@@ -27,19 +29,36 @@ int main(int argc, char* argv[]) {
 		LogAnalyser analyser;
 		auto stats = analyser.analyse(filePath);
 
-		if(argc == 2 || std::string(argv[2]) == "--stats") {
-			std::cout << "File: " << filePath << "\n";
-			std::cout << "Total lines: " << stats.lineCount << "\n";
-			std::cout << "INFO: " << stats.info << "\n";
-			std::cout << "WARNING: " << stats.warning << "\n";
-			std::cout << "ERROR: " << stats.error << "\n";
+		//---Output Handling---
+		std::ostream* out = &std::cout;
+		std::ofstream fileOut;
+		
+		if(argc >= 5 && std::string(argv[3]) == "--output"){
+			fileOut.open(argv[4]);
+			
+			if(!fileOut) {
+				std::cerr << "Error: Cannot open output file.\n";
+				return 1;
+			}
+
+			out = &fileOut;
 		}
+
+		//---Default | stats---
+		if(argc == 2 || std::string(argv[2]) == "--stats") {
+			*out << "File: " << filePath << "\n";
+			*out << "Total lines: " << stats.lineCount << "\n";
+			*out << "INFO: " << stats.info << "\n";
+			*out << "WARNING: " << stats.warning << "\n";
+			*out << "ERROR: " << stats.error << "\n";
+		}
+		//---Level Filter---
 		else if(std::string(argv[2]) == "--level" && argc == 4) {
 			std::string level = argv[3];
 
-			if(level == "INFO") std::cout << stats.info << "\n";
-			else if(level == "WARNING") std::cout << stats.warning << "\n";
-			else if(level == "ERROR") std::cout << stats.error << "\n";
+			if(level == "INFO") *out << stats.info << "\n";
+			else if(level == "WARNING") *out << stats.warning << "\n";
+			else if(level == "ERROR") *out << stats.error << "\n";
 			else {
 				std::cerr << "Invalid level\n";
 				return 1;
