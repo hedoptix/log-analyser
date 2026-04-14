@@ -1,5 +1,0 @@
-File: "logs/sample.log"
-Total lines: 5
-INFO: 2
-WARNING: 1
-ERROR: 1
