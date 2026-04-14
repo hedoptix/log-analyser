@@ -1,3 +1,4 @@
+[![C++ CI](https://github.com/hedoptix/log-analyser/actions/workflows/ci.yml/badge.svg)](https://github.com/hedoptix/log-analyser/actions/workflows/ci.yml)
 ## :rocket: C++ Log Analyser
 A Linux-based CLI log analyser built with C++17, designed to process and analyse real-world log files.
 ### :pushpin: Features
