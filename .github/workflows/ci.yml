@@ -9,28 +9,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      -name: Checkout Code
-      uses: actions/checkout@4
+      - name: Checkout Code
+        uses: actions/checkout@4
 
-      -name: Install Dependencies
-      run: |
+      - name: Install Dependencies
+         run: |
         sudo apt-get update
         sudo apt-get install -y cmake g++ libgtest-dev
 
-      -name: Build Google Test
-      run: |
+      - name: Build Google Test
+         run: |
         cd /usr/src/gtest
         sudo cmake .
         sudo make
         sudo cp lib/*.a /usr/lib
 
-      -name: Build Project
-      run: |
+       - name: Build Project
+         run: |
         cmake -S . -B build
         cmake --build build
 
-      -name: Run tests
-      run: |
+       - name: Run tests
+          run: |
         ./build/runTests
 
   
