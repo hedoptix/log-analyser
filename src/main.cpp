@@ -1,6 +1,7 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
+#include <vector>
 #include "LogAnalyser.h"
 
 namespace fs = std::filesystem;
@@ -17,25 +18,41 @@ int main(int argc, char* argv[]) {
 	}
 
 
-	fs::path filePath = argv[1];
+	//---Collect Files---
+	std::vector<fs::path> files;
+	int index = 1;
 
-	//---Check file exists---
-	if(!fs::exists(filePath) || !fs::is_regular_file(filePath)) {
-		std::cerr << "Error: Invalid file: " << filePath << "\n";
+	while(index < argc && std::string(argv[index]).rfind("--", 0) != 0) {
+		files.push_back(argv[index]);
+		++index;
+	}
+
+	if(files.empty()) {
+		std::cerr << "Error: No input files provided\n";
 		return 1;
+	}
+
+	//---Validate Files---
+	for(const auto& file : files) {
+		if(!fs::exists(file)) {
+			std::cerr << "Error: File not found: " << file << "\n";
+			return 1;
+		}
 	}
 
 	try{
 		LogAnalyser analyser;
-		auto stats = analyser.analyse(filePath);
+
+		//---Analyse Multiple Files---
+		auto stats = analyser.analyseMultiple(files);
 
 		//---Output Handling---
 		std::ostream* out = &std::cout;
 		std::ofstream fileOut;
-		
-		if(argc >= 5 && std::string(argv[3]) == "--output"){
-			fileOut.open(argv[4]);
-			
+
+		if(index + 1 < argc && std::string(argv[index + 1]) == "--output"){
+			fileOut.open(argv[index + 2]);
+
 			if(!fileOut) {
 				std::cerr << "Error: Cannot open output file.\n";
 				return 1;
@@ -45,20 +62,24 @@ int main(int argc, char* argv[]) {
 		}
 
 		//---Default | stats---
-		if(argc == 2 || std::string(argv[2]) == "--stats") {
-			*out << "File: " << filePath << "\n";
+		if(index >= argc || std::string(argv[index]) == "--stats") {
 			*out << "Total lines: " << stats.lineCount << "\n";
 			*out << "INFO: " << stats.info << "\n";
 			*out << "WARNING: " << stats.warning << "\n";
 			*out << "ERROR: " << stats.error << "\n";
 		}
 		//---Level Filter---
-		else if(std::string(argv[2]) == "--level" && argc == 4) {
-			std::string level = argv[3];
+		else if(std::string(argv[index]) == "--level") {
+			if(index + 1 >= argc) {
+				std::cerr << "Error Missing level\n";
+				return 1;
+			}
 
-			if(level == "INFO") *out << stats.info << "\n";
-			else if(level == "WARNING") *out << stats.warning << "\n";
-			else if(level == "ERROR") *out << stats.error << "\n";
+			std::string level = argv[index + 1];
+
+			if(level == "INFO") *out << "INFO: " << stats.info << "\n";
+			else if(level == "WARNING") *out << "WARNING: " << stats.warning << "\n";
+			else if(level == "ERROR") *out << "Error: " << stats.error << "\n";
 			else {
 				std::cerr << "Invalid level\n";
 				return 1;

@@ -3,8 +3,9 @@
 #include <stdexcept>
 #include <string>
 #include <regex>
+#include <vector>
 
-LogStats LogAnalyser::analyse(const std::filesystem::path& filePath) {
+LogStats LogAnalyser::analyse(const std::filesystem::path& filePath) const {
 	std::ifstream file(filePath);
 	if(!file.is_open()) {
 		throw std::runtime_error("Couldn't open file");
@@ -28,4 +29,18 @@ LogStats LogAnalyser::analyse(const std::filesystem::path& filePath) {
 		}
 	}
 	return stats;
+}
+
+LogStats LogAnalyser::analyseMultiple(const std::vector<std::filesystem::path>& files) const {
+	LogStats total;
+
+	for(const auto& file : files) {
+		LogStats stats = analyse(file);
+		
+		total.lineCount += stats.lineCount;
+		total.info += stats.info;
+		total.warning += stats.warning;
+		total.error += stats.error;
+	}
+	return total;
 }

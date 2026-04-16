@@ -1,5 +1,6 @@
 #pragma once
 #include <filesystem>
+#include <vector>
 
 struct LogStats {
 	std::size_t lineCount = 0;
@@ -10,6 +11,6 @@ struct LogStats {
 
 class LogAnalyser {
 public:
-	LogStats analyse(const std::filesystem::path& filePath);
-
-};
+	LogStats analyse(const std::filesystem::path& filePath) const;
+	LogStats analyseMultiple(const std::vector<std::filesystem::path>& files) const;
+}; 
