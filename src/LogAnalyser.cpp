@@ -1,12 +1,17 @@
 #include "LogAnalyser.h"
+#include "TextLogParser.h"
+#include "JsonLogParser.h"
+
 #include <fstream>
-#include <iostream>
 #include <stdexcept>
-#include <string>
-#include <regex>
-#include <vector>
 #include <future>
 #include <thread>
+
+//---Constructor---
+LogAnalyser::LogAnalyser() {
+	parsers.push_back(std::make_unique<TextLogParser>());
+	parsers.push_back(std::make_unique<JsonLogParser>());
+}
 
 //---Single File Analysis---
 LogStats LogAnalyser::analyse(const std::filesystem::path& filePath) const {
@@ -16,45 +21,26 @@ LogStats LogAnalyser::analyse(const std::filesystem::path& filePath) const {
 		throw std::runtime_error("Couldn't open file");
 	}
 
-	//---Text Log Format---
-	//2024-01-01 10:00:00 INFO Start
-	static const std::regex textPattern(R"(^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) (INFO|WARNING|ERROR) (.*))");
-
-	//---JSON Log Format (flexible spacing)---
-	//{"time":"2024-01-01 10:00:01","level":"ERROR","message":"fail"}
-	//{ "time":"2024-01-01 10:00:02", "level":"WARNING", "message":"warn" }
-	static const std::regex jsonPattern(R"json(\{\s*"time":"(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})"\s*,\s*"level":"(INFO|WARNING|ERROR)"\s*,\s*"message":"([^"]*)"\s*\})json");
-
 	std::string strLine;
-	std::smatch match;
 	LogStats stats;
-
-	std::string level;
 
 	while(std::getline(file, strLine)) {
 		++stats.lineCount;
 
-		//---Text Format---
-		if(std::regex_match(strLine, match, textPattern)) {
-			level = match[2];
+		//---Try all parsers(Startegy Pattern)---
+		for(const auto& parser : parsers) {
+			auto level = parser->parse(strLine);
 
-			if(level == "INFO") ++stats.info;
-			else if(level == "WARNING") ++stats.warning;
-			else if(level == "ERROR") ++stats.error;
-		}
-		//---JSON Format---
-		else if(std::regex_match(strLine, match, jsonPattern)) {
-			level = match[2];
+			if(level.has_value()) {
+				if(*level == LogLevel::INFO) ++stats.info;
+				else if(*level == LogLevel::WARNING) ++stats.warning;
+				else if(*level == LogLevel::ERROR) ++stats.error;
 
-			if(level == "INFO") ++stats.info;
-			else if(level == "WARNING") ++stats.warning;
-			else if(level == "ERROR") ++stats.error;
-		}
-		//---Invalid Line---
-		else {
-			std::cout << "Invalid line: " << strLine << "\n";
+				break; //Stop after first successful parser
+			}
 		}
 	}
+
 	return stats;
 }
 
