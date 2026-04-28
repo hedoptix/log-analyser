@@ -1,11 +1,11 @@
 [![C++ CI](https://github.com/hedoptix/log-analyser/actions/workflows/ci.yml/badge.svg)](https://github.com/hedoptix/log-analyser/actions/workflows/ci.yml)
-## :rocket: C++ Log Analyser
+## C++ Log Analyser
 A Linux-based CLI log analyser built with C++17, designed to process and analyse real-world log files.
-## How to Use
-- :arrow_down: **Clone the Repository** <br/><br/>
+## :rocket: How to Use
+- **Clone the Repository** <br/><br/>
 ```git clone https://github.com/hedoptix/log-analyser.git``` <br/>
 ```cd log-analyser``` <br/><br/>
-- :arrow_forward: **Build & Run** <br/><br/>
+- **Build & Run** <br/><br/>
 ```cmake -S . -B build``` <br/>
 ```cmake --build build``` <br/>
 ```./build/log_analyser logs/sample.log --stats```
